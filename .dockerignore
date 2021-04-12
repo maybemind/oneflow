@@ -29,3 +29,7 @@
 **/core.7*
 **/core.8*
 **/core.9*
+/.cache
+/oneflow-src.zip
+/distributed-tmp
+/serving-tmp

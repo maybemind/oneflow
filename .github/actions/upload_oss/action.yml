@@ -1,16 +1,20 @@
 inputs:
-    src_path:
-      required: true
-    oss_dst_path:
-      required: true
-    oss_access_key_id:
-      required: true
-    oss_access_key_secret:
-      required: true
+  src_path:
+    required: true
+  oss_dst_path:
+    required: true
+  oss_access_key_id:
+    required: true
+  oss_access_key_secret:
+    required: true
 runs:
   using: "composite"
   steps:
     - run: |
+        if [ -z "$OSS_ACCESS_KEY_ID" ]
+        then
+          exit 0
+        fi
         if [ ! -f "$HOME/ossutil64" ]; then
           curl http://gosspublic.alicdn.com/ossutil/1.6.19/ossutil64 -o $HOME/ossutil64
         fi

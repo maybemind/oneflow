@@ -26,45 +26,53 @@
 
   - Python >= 3.5
   - CUDA Toolkit Linux x86_64 Driver
-    | OneFlow |CUDA Driver Version|
-    |---|---|
-    | oneflow_cu110  | >= 450.36.06  |
-    | oneflow_cu102  | >= 440.33  |
-    | oneflow_cu101  | >= 418.39  |
-    | oneflow_cu100  | >= 410.48  |
-    | oneflow_cu92  | >= 396.26  |
-    | oneflow_cu91  | >= 390.46  |
-    | oneflow_cu90  | >= 384.81  |
-    | oneflow_cpu  | N/A  |
 
     - CUDA runtime is statically linked into OneFlow. OneFlow will work on a minimum supported driver, and any driver beyond. For more information, please refer to [CUDA compatibility documentation](https://docs.nvidia.com/deploy/cuda-compatibility/index.html).
 
-    - Support for latest stable version of CUDA will be prioritized. Please upgrade your Nvidia driver to version 440.33 or above and install `oneflow_cu102` if possible.
-
-    - We are sorry that due to limits on bandwidth and other resources, we could only guarantee the efficiency and stability of `oneflow_cu102`. We will improve it ASAP.
+    - Please upgrade your Nvidia driver to version 440.33 or above and install OneFlow for CUDA 10.2 if possible.
 
   ### Install with Pip Package
 
-  - To install latest release of OneFlow with CUDA support:
+  - To install latest stable release of OneFlow with CUDA support:
 
     ```
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cu102 --user
+    python3 -m pip install -f https://release.oneflow.info oneflow_cu102 --user
     ```
+
+  - To install nightly release of OneFlow with CUDA support:
+
+    ```
+    python3 -m pip install oneflow --user -f https://staging.oneflow.info/branch/master/cu102
+    ```
+
+  - To install other available builds for different variants:
+    ```
+    python3 -m pip install oneflow --user -f https://staging.oneflow.info/branch/master/[PLATFORM]
+    ```
+
+    All available `[PLATFORM]`:
+    | Platform |CUDA Driver Version| Supported GPUs |
+    |---|---|---|
+    | cu111  | >= 450.80.02  | GTX 10xx, RTX 20xx, A100, RTX 30xx |
+    | cu110, cu110_xla  | >= 450.36.06  | GTX 10xx, RTX 20xx, A100|
+    | cu102, cu102_xla  | >= 440.33  | GTX 10xx, RTX 20xx |
+    | cu101, cu101_xla  | >= 418.39  | GTX 10xx, RTX 20xx |
+    | cu100, cu100_xla  | >= 410.48  | GTX 10xx, RTX 20xx |
+    | cpu  | N/A | N/A |
 
   - To install latest release of CPU-only OneFlow:
 
     ```
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cpu --user
+    python3 -m pip install --find-links https://release.oneflow.info oneflow_cpu --user
     ```
 
-  - To install OneFlow with legacy CUDA support, run one of:
+  - To install legacy version of OneFlow with CUDA support:
+
     ```
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cu101 --user
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cu100 --user
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cu92 --user
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cu91 --user
-    python3 -m pip install --find-links https://oneflow-inc.github.io/nightly oneflow_cu90 --user
+    python3 -m pip install --find-links https://release.oneflow.info oneflow_cu102==0.3.1 --user
     ```
+
+    Some legacy versions available: `0.1.10`, `0.2.0`, `0.3.0`, `0.3.1`
 
   - If you are in China, you could run this to have pip download packages from domestic mirror of pypi:
     ```
@@ -84,11 +92,13 @@
 
     - To install dependencies, run:
 
+      On CentOS:
+
       ```
       yum-config-manager --add-repo https://yum.repos.intel.com/setup/intelproducts.repo && \
       rpm --import https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
       yum update -y && yum install -y epel-release && \
-      yum install -y intel-mkl-64bit-2020.0-088 nasm swig rdma-core-devel
+      yum install -y intel-mkl-64bit-2020.0-088 nasm rdma-core-devel
       ```
 
       On CentOS, if you have MKL installed, please update the environment variable:
@@ -109,10 +119,10 @@
 
 2. #### Clone Source Code
 
-    - #### Option 1: Clone source code from github
+    - #### Option 1: Clone source code from GitHub
 
       ```bash
-      git clone https://github.com/Oneflow-Inc/oneflow
+      git clone https://github.com/Oneflow-Inc/oneflow --depth=1
       ```
 
     - #### Option 2: Download from Aliyun
@@ -126,18 +136,42 @@
 
 3. #### Build and Install OneFlow
 
-    - In the root directory of OneFlow source code, run:
+    - #### Option 1: Build in docker container (recommended)
+      - In the root directory of OneFlow source code, run:
 
-      ```
-      mkdir build
-      cd build
-      cmake ..
-      make -j$(nproc)
-      make pip_install
-      ```
+        ```
+        python3 docker/package/manylinux/build_wheel.py
+        ```
 
-    - If you are in China, please add this CMake flag `-DTHIRD_PARTY_MIRROR=aliyun` to speed up the downloading procedure for some dependency tar files.
-    - For pure CPU build, please add this CMake flag `-DBUILD_CUDA=OFF`.
+        This should produces `.whl` files in the directory `wheelhouse`
+
+      - If you are in China, you might need to add these flags:
+
+        ```
+        --use_tuna --use_system_proxy --use_aliyun_mirror
+        ```
+
+      - You can choose CUDA/Python versions of wheel by adding:
+
+        ```
+        --cuda_version=10.1 --python_version=3.6,3.7
+        ```
+
+      - For more useful flags, plese run the script with flag `--help` or refer to the source code of the script.
+
+    - #### Option 2: Build on bare metal
+      - In the root directory of OneFlow source code, run:
+
+        ```
+        mkdir build
+        cd build
+        cmake ..
+        make -j$(nproc)
+        make pip_install
+        ```
+
+      - If you are in China, please add this CMake flag `-DTHIRD_PARTY_MIRROR=aliyun` to speed up the downloading procedure for some dependency tar files.
+      - For pure CPU build, please add this CMake flag `-DBUILD_CUDA=OFF`.
 
 ### Troubleshooting
 
@@ -192,7 +226,7 @@ For those who would like to understand the OneFlow internals, please read the do
 * [BERT](https://github.com/Oneflow-Inc/OneFlow-Benchmark/tree/master/LanguageModeling/BERT)
 
 ## Communication
-* Github issues : any install, bug, feature issues.
+* GitHub issues : any install, bug, feature issues.
 * [www.oneflow.org](http://www.oneflow.org) : brand related information.
 
 ## Contributing

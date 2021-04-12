@@ -30,11 +30,6 @@ limitations under the License.
 
 namespace oneflow {
 
-enum class ColIdOrder { kUnCertain = 0, kAscending, kDescending };
-
-bool IsFirstRegstInPieceWithOrder(const Regst*, ColIdOrder);
-bool IsLastRegstInPieceWithOrder(const Regst*, ColIdOrder);
-
 class Actor {
  public:
   OF_DISALLOW_COPY_AND_MOVE(Actor);
@@ -53,9 +48,15 @@ class Actor {
   int64_t actor_id() const { return actor_id_; }
 
  protected:
+  struct BlobInfo {
+    LogicalBlobId lbi;
+    int64_t regst_desc_id;
+    int64_t ordinal;
+    RegstSlot* rs;
+  };
   struct ExecKernel {
     std::unique_ptr<const Kernel> kernel;
-    HashMap<std::string, int64_t> bn_in_op2regst_desc_id;
+    HashMap<std::string, BlobInfo> bn_in_op2blob_info;
   };
   using MsgHandler = int (Actor::*)(const ActorMsg&);
   enum class RegstNameType { kNaive = 0, kCustomized };
@@ -147,7 +148,6 @@ class Actor {
 
  protected:
   int64_t GetGlobalWorkStreamId() const;
-  int64_t GetLocalWorkStreamId() const;
   virtual bool NeedCollectActEvent() const {
     return Global<RuntimeCtx>::Get()->NeedCollectActEvent();
   }
@@ -182,6 +182,7 @@ class Actor {
       const PbMap<std::string, RegstDescProto>& produced_ids);
   void TakeOverNaiveConsumed(const PbMap<std::string, RegstDescIdSet>& consumed_ids);
   void TakeOverNaiveProduced(const PbMap<std::string, RegstDescProto>& produced_ids);
+  void InitBnInOp2BlobInfo(const TaskProto& task_proto);
 
   // Send Msgs
   void AsyncSendNaiveProducedRegstMsgToConsumer();

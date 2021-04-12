@@ -26,8 +26,6 @@ Regst::Regst() {
   status_.regst_desc_id = -1;
   status_.piece_id = -1;
   status_.act_id = -1;
-  status_.col_id = 0;
-  status_.max_col_id = 0;
   regst_desc_ = nullptr;
   comm_net_token_ = nullptr;
 }
@@ -43,11 +41,7 @@ Blob* Regst::GetBlobByLbi(const LogicalBlobId& lbi) {
   if (ordinal >= 0) {
     return sorted_blob_vec_.at(ordinal).get();
   } else {
-    if (lbi.is_packed_id()) {
-      return packed_blob_.get();
-    } else {
-      return nullptr;
-    }
+    return nullptr;
   }
 }
 
